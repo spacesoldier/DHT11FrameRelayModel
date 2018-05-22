@@ -92,11 +92,25 @@ struct frameAddr : FrameAddress { frameAddr() {
     EA1 = 1;
 } } frameAddr;
 
+// длина буфера данных для отправки
+int buf_len = 128;
+// буфер данных
+uint8_t sendBuffer[128];
 
 // отправка данных с датчика по протоколу Frame Relay
 void sendFrameRelay(){
   if (deviceMode == TRANSMIT_MODE){
-    // TODO: concat a byte array and write it to serial
+    String atm_data = "{ 'humidity':'"+ String(humid,1)+"', 'temp':'"+String(temp,1)+"'}";
+    buf_len = 2 + sizeof(frameAddr) + atm_data.length();
+
+    sendBuffer[0] = frameStartEnd;
+    sendBuffer[buf_len - 1] = frameStartEnd;
+    memcpy(sendBuffer + 1, &frameAddr, 2);
+    for (int i = 3; i< 3 + atm_data.length(); i++){
+      sendBuffer[i] = atm_data.charAt(i-3);
+    }
+
+    Serial.write(sendBuffer, buf_len);
   }
 }
 
